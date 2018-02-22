@@ -1,5 +1,7 @@
 
 #
+# Adapted from Python for Finance by Yves Hilpisch (2014).
+#
 # Valuation of European call options in Black-Scholes-Merton model
 # incl. Vega function and implied volatility estimation
 #
