@@ -10,6 +10,8 @@
 
 from math import log, sqrt, exp
 from scipy import stats
+import pandas as pd
+from bsm_functions import *
 
 def bsm_call_value(S0, K, T, r, sigma):
     ''' Valuation of European call option in BSM model.
@@ -67,13 +69,11 @@ def bsm_vega(S0, K, T, r, sigma):
         to sigma, i.e. Vega
 
     '''
-    from math import log, sqrt
-    from scipy import stats
 
     S0 = float(S0)
-    d1 = (log(S0 / K) + (r + 0.5 * sigma ** 2) * T / (sigma * sqrt(T))
+    d1 = (log(S0 / K) + (r + 0.5 * sigma ** 2) * T / (sigma * sqrt(T)))
     vega = S0 * stats.norm.cdf(d1, 0.0, 1.0) * sqrt(T)
-	return vega
+    return vega
 
 # Implied volatility function
 def bsm_call_imp_vol(S0, K, T, r, C0, sigma_est, it=100):
@@ -103,4 +103,51 @@ def bsm_call_imp_vol(S0, K, T, r, C0, sigma_est, it=100):
         sigma_est -= ((bsm_call_value(S0, K, T, r, sigma_est) - C0)
                         / bsm_vega(S0, K, T, r, sigma_est))
     return sigma_est
+
+
+V0 = 17.6639 #as at 31 March 2014
+h5 = pd.HDFStore('./source/vstoxx_data_31032014.h5', 'r')
+print futures_data
+print options_data
+
+tol = 0.5  # tolerance level for moneyness
+for option in options_data.index:
+    # iterating over all option quotes
+    forward = futures_data[futures_data['MATURITY'] == \
+                options_data.loc[option]['MATURITY']]['PRICE'].values[0]
+      # picking the right futures value
+    if (forward * (1 - tol) < options_data.loc[option]['STRIKE']
+                             < forward * (1 + tol)):
+        # only for options with moneyness within tolerance
+        imp_vol = bsm_call_imp_vol(
+                V0,  # VSTOXX value
+                options_data.loc[option]['STRIKE'],
+                options_data.loc[option]['TTM'],
+                r,   # short rate
+                options_data.loc[option]['PRICE'],
+                sigma_est=2.,  # estimate for implied volatility
+                it=100)
+        options_data['IMP_VOL'].loc[option] = imp_vol
+
+
+%matplotlib inline
+ gure(figsize=(8, 6))
+ for maturity in maturities:
+    plt.fi data = plot_data[options_data.MATURITY == maturity]
+       # select data for this maturity
+    plt.plot(data['STRIKE'], data['IMP_VOL'],
+              label=maturity.date(), lw=1.5)
+    plt.plot(data['STRIKE'], data['IMP_VOL'], 'r.')
+ plt.grid(True)
+ plt.xlabel('strike')
+ plt.ylabel('implied volatility of volatility')
+ plt.legend()
+ plt.show()
+
+
+
+
+
+
+
 
