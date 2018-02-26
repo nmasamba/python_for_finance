@@ -10,8 +10,9 @@
 
 from math import log, sqrt, exp
 from scipy import stats
-import pandas as pd
 from bsm_functions import *
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def bsm_call_value(S0, K, T, r, sigma):
     ''' Valuation of European call option in BSM model.
